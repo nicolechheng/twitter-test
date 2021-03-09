@@ -10,11 +10,13 @@ from selenium.webdriver import Firefox
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from openpyxl import Workbook
 
 path = r"C:\Program Files (x86)\geckodriver.exe"
 
 driver = webdriver.Firefox(executable_path=path)
-driver.get('https://www.twitter.com/login')
+#driver.get('https://www.twitter.com/login')
+driver.get('https://twitter.com/explore')
 
 
 def get_tweet_data(card):
@@ -43,21 +45,21 @@ def get_tweet_data(card):
     tweet = (username, handle, postdate, text, reply_cnt, retweet_cnt, like_cnt)
     return tweet
 
-username = WebDriverWait(driver,30).until(EC.presence_of_element_located((By.XPATH,'//input[@name="session[username_or_email]"]')))
-username.send_keys('mytwittest2021@gmail.com')
-password = WebDriverWait(driver,30).until(EC.presence_of_element_located((By.XPATH,'//input[@name="session[password]"]')))
-password.send_keys('nicole2021')
-password.send_keys(Keys.RETURN)
+#username = WebDriverWait(driver,30).until(EC.presence_of_element_located((By.XPATH,'//input[@name="session[username_or_email]"]')))
+#username.send_keys('mytwittest2021@gmail.com')
+#password = WebDriverWait(driver,30).until(EC.presence_of_element_located((By.XPATH,'//input[@name="session[password]"]')))
+#password.send_keys('nicole2021')
+#password.send_keys(Keys.RETURN)
 
 search_input = WebDriverWait(driver,30).until(EC.presence_of_element_located((By.XPATH,'//input[@aria-label="Search query"]')))
-search_input.send_keys('often geocode:34.529874980709636,-105.93180742513375,278km since:2020-03-01 until:2020-03-31')
+search_input.send_keys('always OR never OR sometimes OR frequently OR often geocode:36.202,-121.756,639km since:2020-03-01 until:2020-03-31')
 search_input.send_keys(Keys.RETURN)
 WebDriverWait(driver,30).until(EC.presence_of_element_located((By.LINK_TEXT,'Latest'))).click()
 #WebDriverWait(driver,30).until(EC.presence_of_element_located((By.XPATH,'/html/body/div/div/div/div[2]/main/div/div/div/div[1]/div/div[2]/div/div/section/div/div/div[2]/div/div/article/div/div/div/div[2]/div[2]/div[1]/div/div/div[1]/div[1]/a/div/div[1]/div[1]'))).click()
 #WebDriverWait(driver,30).until(EC.presence_of_element_located((By.XPATH,'/html/body/div/div/div/div[2]/main/div/div/div/div[1]/div/div[1]/div[1]/div/div/div/div/div[1]/div/div'))).click()
 
 data = []
-df = pd.DataFrame()
+df = pd.DataFrame(columns = ["Date", "Text", "Location"])
 tweet_ids = set()
 last_position = driver.execute_script("return window.pageYOffset;")
 scrolling = True
@@ -72,6 +74,14 @@ while scrolling:
             if tweet_id not in tweet_ids:
                 tweet_ids.add(tweet_id)
                 data.append(tweet)
+                t = {"Date":tweet[2], "Text":tweet[3], "Location": "Arizona"}
+                df = df.append(t, ignore_index=True) #successfully adds tweet data to dataframe
+                #df.append(tweet)
+                #df.append(driver.find_elements_by_xpath('/html/body/div/div/div/div[2]/main/div/div/div/div[1]/div/div[2]/div/div/section/div/div/div[1]/div/div/article/div/div/div/div[2]/div[2]/div[1]/div/div/div[1]/a'))
+                #need to create a df
+                #add tweet
+                #add date
+                #
                 #here i'm trying to click into each account and then wanted to extract the location data and then i click the back arrow key... not working, telling me the elements are stale afterwards
                 #WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH,
                                                                         #'/html/body/div/div/div/div[2]/main/div/div/div/div[1]/div/div[2]/div/div/section/div/div/div[2]/div/div/article/div/div/div/div[2]/div[2]/div[1]/div/div/div[1]/div[1]/a/div/div[1]/div[1]'))).click()
@@ -81,7 +91,7 @@ while scrolling:
     while True:
         # check scroll position
         driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
-        sleep(2)
+        sleep(3)
         curr_position = driver.execute_script("return window.pageYOffset;")
         if last_position == curr_position:
             scroll_attempt += 1
@@ -98,5 +108,6 @@ while scrolling:
 
 # close the web driver
 driver.close()
-
-print(len(data))
+df.to_excel("CA.xlsx")
+#print(data)
+print(df)
